@@ -3,13 +3,13 @@ package javanhf;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
-import javax.swing.*;
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class Filter {
     public static void saveFilter(MainFrame frame, String filename) throws IOException {
-        PrintWriter pw = new PrintWriter(filename, "ISO-8859-1");
+        PrintWriter pw = new PrintWriter(filename, StandardCharsets.ISO_8859_1);
 
         String dir = "none";
         if (frame.checkVert.isSelected()) {
@@ -52,33 +52,28 @@ public class Filter {
             file.delete();
         }
 
-        String src_path = frame.canvas.getImage_path();
-        String mask_path = frame.mask.getImage_path();
-        String result_path = frame.result.getImage_path();
-
-        pw.printf("%s\n%s\n%s\n%s\n%s", dir, sel, src_path, mask_path, result_path);
+        pw.printf("%s\n%s", dir, sel);
         pw.close();
     }
     public static void loadFilter(MainFrame frame, String filename) throws IOException {
 
-        FileReader fr = new FileReader(filename, Charset.forName("ISO-8859-1"));
+        FileReader fr = new FileReader(filename, StandardCharsets.ISO_8859_1);
         BufferedReader br = new BufferedReader(fr);
         String line = br.readLine();
-        if (line.equals("vertical")) {
-            frame.checkVert.setSelected(true);
-        }
-        else if (line.equals("horizontal")) {
-            frame.checkHoriz.setSelected(true);
-        }
-        else if (line.equals("diagonal")) {
-            frame.checkVert.setSelected(true);
-            frame.checkHoriz.setSelected(true);
+        switch (line) {
+            case "vertical" -> frame.checkVert.setSelected(true);
+            case "horizontal" -> frame.checkHoriz.setSelected(true);
+            case "diagonal" -> {
+                frame.checkVert.setSelected(true);
+                frame.checkHoriz.setSelected(true);
+            }
         }
         line = br.readLine();
         for (int i = 0; i < frame.sels.length; ++i) {
             if (frame.sels[i].equals(line))
                 frame.selectorBox.setSelectedIndex(i);
         }
+        frame.genSorter();
 
         try {
             frame.canvas.setImage(Imgcodecs.imread("src.png"));

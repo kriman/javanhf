@@ -11,7 +11,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Statikus függvények átalakításokhoz
+ */
 public class ConverterTools {
+    /**
+     * Mat képet BufferedImage típusra alakítja
+     * @param src Mat képbemenet
+     * @return az eredeti kép BufferedImage formában
+     * @throws IOException
+     * @throws CvException
+     */
     public static BufferedImage toBufferedImage(Mat src) throws IOException, CvException {
 
         MatOfByte matOfByte = new MatOfByte();
@@ -19,7 +29,7 @@ public class ConverterTools {
         Imgcodecs.imencode(".jpg", src, matOfByte);
 
         byte[] byteArray = matOfByte.toArray();
-        BufferedImage bufImage = null;
+        BufferedImage bufImage;
         InputStream in = new ByteArrayInputStream(byteArray);
         bufImage = ImageIO.read(in);
         return bufImage;
