@@ -19,14 +19,14 @@ public class ConverterTools {
      * Mat képet BufferedImage típusra alakítja
      * @param src Mat képbemenet
      * @return az eredeti kép BufferedImage formában
-     * @throws IOException
-     * @throws CvException
+     * @throws IOException ha nem sikeres a beolvasás
+     * @throws CvException sikertelen konvertálás
      */
     public static BufferedImage toBufferedImage(Mat src) throws IOException, CvException {
 
         MatOfByte matOfByte = new MatOfByte();
 
-        Imgcodecs.imencode(".jpg", src, matOfByte);
+        Imgcodecs.imencode(".png", src, matOfByte);
 
         byte[] byteArray = matOfByte.toArray();
         BufferedImage bufImage;

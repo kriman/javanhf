@@ -4,8 +4,14 @@ import nu.pattern.OpenCV;
 
 import javax.swing.*;
 
-
+/**
+ * A program fő osztálya
+ */
 public class Main {
+    /**
+     * A program indítása
+     * @param args command line arguments
+     */
     public static void main(String[] args) {
         OpenCV.loadLocally();
 

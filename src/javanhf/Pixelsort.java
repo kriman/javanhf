@@ -5,25 +5,50 @@ import org.opencv.core.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * Class pixelsorthoz
+ */
 public class Pixelsort {
+    /** A rendezés lehetséges irányai */
+    enum direction {
+        /** Függőleges rendezés */
+        vertical,
+        /** Vízszintes rendezés */
+        horizontal}
 
-    enum direction {vertical, horizontal}
-
+    /** Rendezési sorrend invertálása */
     private boolean invert = false;
+    /** Rendezési szempont választása */
     private Selector selector;
 
+    /**
+     * Selector beállítása a rendezéshez
+     * @param selector Selector típusú objektum
+     */
     public void setSelector(Selector selector) {
         this.selector = selector;
     }
 
+    /**
+     * Rendezés sorrendjének invertálása
+     * @param invert Invertálás
+     */
     public void setInvert(boolean invert) {
         this.invert = invert;
     }
 
+    /**
+     * Kép rendezése megadott maszk alapján, a megadott irányban
+     * @param img rendezendő kép
+     * @param mask használandó maszk
+     * @param dir kijelölt irány
+     * @return Rendezett kép
+     * @throws NotSameSizeException Ha a maszk és a kép mérete nem egyezik
+     */
     public Mat sort(Mat img, Mat mask, direction dir) throws NotSameSizeException {
 
         if (img.width() != mask.width() || img.height() != mask.height()) {
-            throw new NotSameSizeException("Images are not the same size");
+            throw new NotSameSizeException("Cannot sort image (" + img.size() + ") with mask (" + mask.size() + ")");
         }
 
         int dir1 = dir == direction.vertical ? img.rows() : img.cols();
@@ -72,7 +97,16 @@ public class Pixelsort {
         return img;
     }
 
-    public byte[] sortcols(Mat img, int start, int stop, int col, direction dir, byte[] img_buff) {
+    /**
+     * Kijelelölt oszlopot vagy sort rendezi egy megadott intervallumon
+     * @param img Eredeti kép
+     * @param start intervallum kezdete
+     * @param stop intervallum vége
+     * @param col kijelölt sor/oszlop
+     * @param dir kijelölt irány
+     * @param img_buff a sort által átadott tömb, ami rendezve lesz
+     */
+    private void sortcols(Mat img, int start, int stop, int col, direction dir, byte[] img_buff) {
         /* select values to sort by */
         int size = stop - start;
         int[] partline = new int[size];
@@ -110,7 +144,6 @@ public class Pixelsort {
 
         /* a rendezett pixelek átmásolása */
         ArrayList<Byte> newarray = new ArrayList<>();
-        int n_i = 0;
         for (int rowi = 0; rowi < size; rowi++) {
             int index;
             if (dir == direction.vertical) {
@@ -138,7 +171,5 @@ public class Pixelsort {
             img_buff[index + 1] = newarray.get(j + 1);
             img_buff[index + 2] = newarray.get(j + 2);
         }
-
-        return img_buff;
     }
 }

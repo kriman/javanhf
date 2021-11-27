@@ -7,32 +7,56 @@ import java.io.*;
 import java.util.ArrayList;
 
 
+import org.json.simple.parser.ParseException;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+/**
+ * Az ablak fő frameje
+ */
 public class MainFrame extends JFrame {
-    DrawCanvas canvas = new DrawCanvas();
-    DrawCanvas mask = new DrawCanvas();
-    DrawCanvas placeholder = new DrawCanvas();
-    DrawCanvas result = new DrawCanvas();
-    JPanel panelCanvas;
-    JPanel panelMask;
-    JPanel panelPlaceholder;
-    JPanel panelResult;
+    /** Forrás kép */
+    final DrawCanvas canvas = new DrawCanvas();
+    /** Maszk kép */
+    final DrawCanvas mask = new DrawCanvas();
+    /** Harmadik kép */
+    final DrawCanvas placeholder = new DrawCanvas();
+    /** Eredmény kép */
+    final DrawCanvas result = new DrawCanvas();
+    /** Forrás kép JPanel */
+    final JPanel panelCanvas;
+    /** Maszk kép JPanel */
+    final JPanel panelMask;
+    /** Harmadik kép JPanel */
+    final JPanel panelPlaceholder;
+    /** Eredmény kép JPanel */
+    final JPanel panelResult;
 
-    JFileChooser fc = new JFileChooser(); /** Fájlválasztás */
-    JCheckBox checkHoriz; /** Vízszintes rendezés */
-    JCheckBox checkVert; /** Függőleges rendezés */
-    JCheckBox invert; /** Rendezés iránya (növekvő, csökkenő) */
-    String[] sels = {"Intensity", "Hue", "Saturation", "Lightness", "Blue", "Green", "Red"}; /** Rendezési szempontok */
-    JComboBox selectorBox; /** Rendezési szempontok kiválasztása */
-    JButton sortbutton; /** Rendezés indítása */
-    boolean mousepressed = false;
-    Pixelsort ps; /** Pixelsorter */
+    /** Fájlválasztás */
+    final JFileChooser fc = new JFileChooser();
+    /** Vízszintes rendezés */
+    final JCheckBox checkHoriz;
+    /** Függőleges rendezés */
+    final JCheckBox checkVert;
+    /** Rendezés iránya (növekvő, csökkenő) */
+    final JCheckBox invert;
+    /** Rendezési szempontok */
+    final String[] sels = {"Intensity", "Hue", "Saturation", "Lightness", "Blue", "Green", "Red"};
+    /** Rendezési szempontok kiválasztása */
+    final JComboBox<String> selectorBox;
+    /** Rendezés indítása */
+    final JButton sortbutton;
+    /** dinamikus maszknál ha le van nyomva az egérgomb */
+    private boolean mousepressed = false;
+    /** Pixelsorter */
+    Pixelsort ps;
 
+    /**
+     * Létrehoz egy MainFrame objektumot
+     */
     public MainFrame() {
         super("JavaNHF");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -76,6 +100,14 @@ public class MainFrame extends JFrame {
         mi6.setActionCommand("sort");
         menuitems.add(mi6);
 
+        JMenuItem mi10 = new JMenuItem("Load Filter");
+        mi10.setActionCommand("loadfilter");
+        menuitems.add(mi10);
+
+        JMenuItem mi11 = new JMenuItem("Save Filter");
+        mi11.setActionCommand("savefilter");
+        menuitems.add(mi11);
+
         JMenuItem mi7 = new JMenuItem("Save Result");
         mi7.setActionCommand("save");
         menuitems.add(mi7);
@@ -109,7 +141,7 @@ public class MainFrame extends JFrame {
         invert.setForeground(Color.white);
         bar.add(invert);
 
-        selectorBox = new JComboBox(sels);
+        selectorBox = new JComboBox<>(sels);
         selectorBox.setBackground(Color.black);
         selectorBox.setForeground(Color.white);
         selectorBox.setBounds(50, 50, 90, 20);
@@ -185,6 +217,12 @@ public class MainFrame extends JFrame {
 
     }
 
+    /**
+     * Betölti a canvas egy színnel
+     * @param ref referenciául szolgáló kép
+     * @param dst Cél, amit ki kell tölteni
+     * @param color szín
+     */
     private void fillCanvas(DrawCanvas ref, DrawCanvas dst, Scalar color) {
         Mat src = Mat.zeros(ref.getImageSize(), ref.getImageType());
         src.setTo(color);
@@ -192,6 +230,11 @@ public class MainFrame extends JFrame {
         dst.repaint();
     }
 
+    /**
+     * A canvas tartalmát áthelyezi
+     * @param src Amit át kell helyezni
+     * @param dst Ahova át kell helyezni
+     */
     private void moveCanvas(DrawCanvas src, DrawCanvas dst) {
         Mat img = src.getImage().clone();
         dst.setImage(img);
@@ -199,6 +242,10 @@ public class MainFrame extends JFrame {
         dst.repaint();
     }
 
+    /**
+     * Kép betöltése megadott canvasra
+     * @param canvas betöltés célja
+     */
     private void loadImage(DrawCanvas canvas) {
         int returnVal = fc.showOpenDialog(null);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -208,12 +255,44 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /**
+     * Filter mentése
+     */
+    private void saveFilter() {
+        int returnVal = fc.showSaveDialog(null);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+            try {
+                Filter.saveFilter(this, file.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Filter betöltése
+     */
+    private void loadFilter() {
+        int returnVal = fc.showSaveDialog(null);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+            try {
+                Filter.loadFilter(this, file.getAbsolutePath());
+            } catch (IOException | ParseException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Sorter generálása
+     */
     public void genSorter() {
         ps = new Pixelsort();
         if (invert.isSelected())
             ps.setInvert(true);
         switch (selectorBox.getSelectedIndex()) {
-            case 0 -> ps.setSelector(new IntensitySelector());
             case 1 -> ps.setSelector(new HSLSelector(HSLSelector.HSLChannels.Hue));
             case 2 -> ps.setSelector(new HSLSelector(HSLSelector.HSLChannels.Saturation));
             case 3 -> ps.setSelector(new HSLSelector(HSLSelector.HSLChannels.Lightness));
@@ -223,6 +302,13 @@ public class MainFrame extends JFrame {
             default -> ps.setSelector(new IntensitySelector());
         }
     }
+
+    /**
+     * Sorting végrehajtása
+     * @param img Bemeneti kép
+     * @param dir irány
+     * @return Végeredmény
+     */
     private Mat performSort(Mat img, Pixelsort.direction dir) {
         Mat maskimg = mask.getImage();
         try {
@@ -238,11 +324,18 @@ public class MainFrame extends JFrame {
         return img;
     }
 
+    /**
+     * Dinamikus maszkhoz az egér mozgatásának listenere
+     */
     private class MouseMove implements MouseMotionListener {
 
         @Override
         public void mouseDragged(MouseEvent e) {}
 
+        /**
+         * Ha mozdul az egér
+         * @param e event
+         */
         @Override
         public void mouseMoved(MouseEvent e) {
             if (mousepressed) {
@@ -252,8 +345,8 @@ public class MainFrame extends JFrame {
                 int y = (int) (((double) mousey) / mask.getHeight() * mask.getImage().rows());
 
                 Mat img = mask.getImage();
-                System.out.println(img.rows() + " " + img.cols() + " " + img.channels());
-                System.out.println(x + " " + y);
+                //System.out.println(img.rows() + " " + img.cols() + " " + img.channels());
+                //System.out.println(x + " " + y);
 
                 for (int i = max(0, x); i < min(x + 30, img.cols() - 1); ++i) {
                     for (int j = max(0, y); j < min(y + 30 * (mask.getWidth() / mask.getHeight()), img.rows() - 1); ++j) {
@@ -267,7 +360,14 @@ public class MainFrame extends JFrame {
         }
     }
 
+    /**
+     * Listener a műveletekhez
+     */
     private class MyActionListener implements ActionListener {
+        /**
+         * Ha megnyomódik a gomb
+         * @param ae event
+         */
         @Override
         public void actionPerformed(ActionEvent ae) {
 
@@ -307,11 +407,20 @@ public class MainFrame extends JFrame {
                     placeholder.setImage_path(result.getImage_path());
                     placeholder.repaint();
                 }
+                case "savefilter" -> saveFilter();
+                case "loadfilter" -> loadFilter();
             }
         }
     }
 
+    /**
+     * Dinamikus maszkhoz gombnyomás listener
+     */
     private class ButtonClickListener implements MouseListener {
+        /**
+         * Ha megnyomódik az egérgomb
+         * @param e event
+         */
         @Override
         public void mouseClicked(MouseEvent e) {
             mousepressed = !mousepressed;

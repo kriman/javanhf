@@ -3,11 +3,19 @@ package javanhf;
 /**
  * Választás BGR színkomponensek alapján.
  */
+@SuppressWarnings("ALL")
 public class BGRSelector implements Selector{
     /** A BGR színkomponensek lehetséges értékei */
-    public enum BGRvals {Blue, Green, Red}
+    public enum BGRvals {
+        /** Blue */
+        Blue,
+        /** Green */
+        Green,
+        /** Red */
+        Red
+    }
     /** A kiválasztás alapja */
-    private BGRvals channel;
+    private final BGRvals channel;
 
     /**
      * Létrehoz egy BGRSelectort a kiválasztott csatornával.
@@ -29,7 +37,6 @@ public class BGRSelector implements Selector{
             case Blue -> b & 0xff;
             case Green -> g & 0xff;
             case Red -> r & 0xff;
-            default -> 0;
         };
     }
 }
