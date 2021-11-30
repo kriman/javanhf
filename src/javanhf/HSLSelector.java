@@ -19,6 +19,7 @@ public class HSLSelector implements Selector {
     }
     /** A kiválasztás alapja */
     private final HSLChannels ch;
+
     /**
      * Létrehoz egy HSLSelectort a kiválaszott csatornával.
      * @param ch kiválasztott csatorna

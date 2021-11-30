@@ -9,9 +9,9 @@ import java.io.IOException;
 /**
  * Canvas a képek kirajzolásához
  */
-public class DrawCanvas extends MainFrame {
+public class DrawCanvas extends Canvas {
     /** A canvas alapjául szolgáló kép */
-    private Mat image;
+    private Mat image = new Mat();
     /** A kép útvonala */
     private String image_path;
 

@@ -201,7 +201,7 @@ public class MainFrame extends JFrame {
         }
 
         setResizable(true);
-        setVisible(true);
+        //setVisible(true);
 
         addWindowListener(new WindowAdapter() {
             @Override
